@@ -5,7 +5,7 @@ let
 
   inherit (pkgs) lib;
 
-  mkExample = pkgs.callPackage ./mk-example.nix {};
+  mkExample = pkgs.callPackage ./mk-example.nix { inherit workspace; };
   mkTest = pkgs.callPackage ./mk-test.nix {};
 
   examples = lib.mapAttrs
@@ -17,8 +17,12 @@ let
     );
   exampleDrvs = lib.attrValues examples;
 
+  # build the workspace
+  workspace = pkgs.callPackage ./workspace.nix {};
 in {
-  # build all examples
+  inherit workspace;
+
+  # build all examples (individually, does not use workspace)
   # recommended to build with --keep-going, to keep building other examples when one fails
   # example use: `nix-build -A all --keep-going`
   all = pkgs.symlinkJoin {
@@ -27,24 +31,30 @@ in {
   };
 
   # test all examples
+  # builds the whole workspace to test, to build all examples individually, use `nix-build -A all`
   # recommended to build with --keep-going, to keep running other tests when one fails
   # example use: `nix-build -A test-all --keep-going`
   test-all = pkgs.symlinkJoin {
     name = "all-tests";
-    paths = (builtins.map (mkTest "wayland") exampleDrvs)
-         ++ (builtins.map (mkTest "x11") exampleDrvs);
+    paths = builtins.map
+      (args: mkTest (args // { pkg = workspace; }))
+      (lib.cartesianProduct {
+	displayServer = [ "x11" "wayland" ];
+	exe = lib.attrNames examples;
+      });
   };
 
   # test one example
   # example use: `nix-build -A test --argstr displayServer wayland --argstr example arc`
   # example use: `nix-build -A test.driverInteractive --argstr displayServer wayland --argstr example arc`
-  test = { displayServer, example }: mkTest displayServer examples.${example};
+  test = { displayServer, example }: mkTest {
+    inherit displayServer;
+    pkg = examples.${example};
+    exe = example;
+  };
 
   shell = pkgs.mkShell {
-    inputsFrom = exampleDrvs;
+    inputsFrom = [ workspace ];
     packages = with pkgs; [ rustfmt clippy ];
-
-    # FIXME: inputsFrom workspace instead?
-    # shellHook = ''echo "evaluating depencies for all examples, this could take a while..."'';
   };
 } // examples
