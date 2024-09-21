@@ -41,6 +41,6 @@ in {
     packages = with pkgs; [ rustfmt clippy ];
 
     # FIXME: inputsFrom workspace instead?
-    shellHook = ''echo "evaluating depencies for all examples, this could take a while..."'';
+    # shellHook = ''echo "evaluating depencies for all examples, this could take a while..."'';
   };
 } // examples

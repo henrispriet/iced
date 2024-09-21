@@ -47,10 +47,6 @@ in
     cargoBuildFlags = "--package ${pname}";
     
     cargoLock.lockFile = ./Cargo.lock;
-    cargoLock.outputHashes = {
-      "dpi-0.1.1" = "sha256-25sOvEBhlIaekTeWvy3UhjPI1xrJbOQvw/OkTg12kQY=";
-      "glyphon-0.5.0" = "sha256-OGXLqiMjaZ7gR5ANkuCgkfn/I7c/4h9SRE6MZZMW3m4=";
-    };
 
     buildInputs = [
       expat
@@ -61,8 +57,11 @@ in
     ];
 
     fixupPhase = ''
-      patchelf --0.5.-set-rpath "${lib.makeLibraryPath rpathLibs}" "$out/bin/${pname}";
+      patchelf --set-rpath "${lib.makeLibraryPath rpathLibs}" "$out/bin/${pname}";
     '';
 
     passthru = { inherit rpathLibs; };
+    # HACK: this is _could_ lead to some weird errors if this is wrong
+    # should be fine for the examples though
+    meta.mainProgram = pname;
   }
