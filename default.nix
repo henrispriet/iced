@@ -19,12 +19,16 @@ let
 
 in {
   # build all examples
+  # recommended to build with --keep-going, to keep building other examples when one fails
+  # example use: `nix-build -A all --keep-going`
   all = pkgs.symlinkJoin {
     name = "all-examples";
     paths = exampleDrvs;
   };
 
   # test all examples
+  # recommended to build with --keep-going, to keep running other tests when one fails
+  # example use: `nix-build -A test-all --keep-going`
   test-all = pkgs.symlinkJoin {
     name = "all-tests";
     paths = (builtins.map (mkTest "wayland") exampleDrvs)
