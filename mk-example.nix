@@ -12,14 +12,8 @@
   vulkan-loader,
   wayland,
 }:
-{
-  pname,
-  src,
-}:
+pname:
 let
-  inherit (lib) path;
-  inherit (lib) makeLibraryPath;
-
   rpathLibs = [
     libXcursor
     libXi
@@ -31,11 +25,28 @@ let
   ];
 in
   rustPlatform.buildRustPackage {
-    inherit pname src;
-
+    inherit pname;
     version = "0.1.0";
+
+    src = let
+      fs = lib.fileset;
+      fileset = fs.difference
+	(fs.gitTracked ./.)
+	(fs.unions [
+	  ./npins
+	  (fs.fileFilter (f: f.hasExt "nix") ./.)
+	]);
+    in
+      fs.toSource {
+        root = ./.;
+        inherit fileset;
+      };
+
+    # examples are actually individual sub-crates (because theyre in a workspace?)
+    # cargoBuildFlags = "--example ${pname}";
+    cargoBuildFlags = "--package ${pname}";
+    
     cargoLock.lockFile = ./Cargo.lock;
-    # FIXME: some tomfoolery is going on here
     cargoLock.outputHashes = {
       "dpi-0.1.1" = "sha256-25sOvEBhlIaekTeWvy3UhjPI1xrJbOQvw/OkTg12kQY=";
       "glyphon-0.5.0" = "sha256-OGXLqiMjaZ7gR5ANkuCgkfn/I7c/4h9SRE6MZZMW3m4=";
@@ -50,10 +61,8 @@ in
     ];
 
     fixupPhase = ''
-      patchelf --0.5.-set-rpath "${makeLibraryPath rpathLibs}" "$out/bin/${pname}";
+      patchelf --0.5.-set-rpath "${lib.makeLibraryPath rpathLibs}" "$out/bin/${pname}";
     '';
-
-    # TODO: check that it runs on X11 and wayland via some sort of (micro)vm
 
     passthru = { inherit rpathLibs; };
   }
