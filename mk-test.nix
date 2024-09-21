@@ -38,6 +38,6 @@ in
         start_all()
         machine.wait_for_unit('graphical.target')
         machine.sleep(3)
-        machine.screenshot("screen")
+        machine.screenshot("${package.name}-${displayServer}-screen")
       '';
     })
