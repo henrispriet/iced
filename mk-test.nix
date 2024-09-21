@@ -37,7 +37,7 @@ in
       testScript = ''
         start_all()
         machine.wait_for_unit('graphical.target')
-        machine.sleep(20)
+        machine.sleep(3)
         machine.screenshot("screen")
       '';
     })
