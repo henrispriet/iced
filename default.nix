@@ -3,26 +3,29 @@ let sources = import ./npins; in
 let
   examplesDir = ./examples;
 
-  inherit (pkgs.lib.attrsets) filterAttrs mapAttrs attrValues;
-  inherit (pkgs.lib) path;
+  inherit (pkgs) lib;
 
   mkExample = pkgs.callPackage ./mk-example.nix {};
-  mkTest = pkgs.callPackage (import ./mk-test.nix) {};
+  mkTest = pkgs.callPackage ./mk-test.nix {};
 
-  examples = mapAttrs
-    (pname: _: mkExample { inherit pname; src = (path.append examplesDir pname); })
-    (filterAttrs (n: v: v == "directory") (builtins.readDir examplesDir));
-  exampleDrvs = attrValues examples;
+  examples = lib.mapAttrs
+    # (lib.flip (lib.const mkExample))
+    (n: _: mkExample n)
+    (lib.filterAttrs
+      (n: v: v == "directory")
+      (builtins.readDir examplesDir)
+    );
+  exampleDrvs = lib.attrValues examples;
 
 in {
   # build all examples
-  all = pkgs.buildEnv {
+  all = pkgs.symlinkJoin {
     name = "all-examples";
     paths = exampleDrvs;
   };
 
   # test all examples
-  test-all = pkgs.buildEnv {
+  test-all = pkgs.symlinkJoin {
     name = "all-tests";
     paths = (builtins.map (mkTest "wayland") exampleDrvs)
          ++ (builtins.map (mkTest "x11") exampleDrvs);
@@ -36,5 +39,8 @@ in {
   shell = pkgs.mkShell {
     inputsFrom = exampleDrvs;
     packages = with pkgs; [ rustfmt clippy ];
+
+    # FIXME: inputsFrom workspace instead?
+    shellHook = ''echo "evaluating depencies for all examples, this could take a while..."'';
   };
 } // examples
