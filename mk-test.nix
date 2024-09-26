@@ -36,7 +36,7 @@ nixosTest ({...}: {
   # meta.broken = pkgs.stdenv.isAarch64;
   enableOCR = true;
 
-  testScript = ''
+  testScript = /* py */ ''
     start_all()
     machine.wait_for_unit('graphical.target')
     machine.sleep(3)

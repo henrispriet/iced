@@ -5,7 +5,7 @@ let
 
   inherit (pkgs) lib;
 
-  mkExample = pkgs.callPackage ./mk-example.nix { inherit workspace; };
+  mkExample = pkgs.callPackage ./mk-example.nix {};
   mkTest = pkgs.callPackage ./mk-test.nix {};
 
   examples = lib.mapAttrs

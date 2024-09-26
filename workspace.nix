@@ -31,11 +31,11 @@ in
     src = let
       fs = lib.fileset;
       fileset = fs.difference
-	(fs.gitTracked ./.)
-	(fs.unions [
-	  ./npins
-	  (fs.fileFilter (f: f.hasExt "nix") ./.)
-	]);
+        (fs.gitTracked ./.)
+        (fs.unions [
+          ./npins
+          (fs.fileFilter (f: f.hasExt "nix") ./.)
+        ]);
     in
       fs.toSource {
         root = ./.;
