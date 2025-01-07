@@ -2,6 +2,9 @@
   lib,
   rustPlatform,
   pkg-config,
+  glib,
+  gtk3,
+  atk,
   expat,
   freetype,
   libX11,
@@ -49,6 +52,9 @@ in
     ];
 
     buildInputs = [
+      glib
+      atk
+      gtk3
       expat
       freetype
       libxcb
