@@ -30,14 +30,28 @@ in {
     paths = exampleDrvs;
   };
 
-  # test all examples
+  # test all examples, built in workspace
+  # builds the whole workspace to test, to build all examples individually, use `nix-build -A all`
+  # recommended to build with --keep-going, to keep running other tests when one fails
+  # example use: `nix-build -A test-workspace --keep-going`
+  test-workspace = pkgs.symlinkJoin {
+    name = "all-tests-workspace";
+    paths = builtins.map
+      (args: mkTest (args // { pkg = workspace; }))
+      (lib.cartesianProduct {
+        displayServer = [ "x11" "wayland" ];
+        exe = lib.attrNames examples;
+      });
+  };
+
+  # test all examples, built individually
   # builds the whole workspace to test, to build all examples individually, use `nix-build -A all`
   # recommended to build with --keep-going, to keep running other tests when one fails
   # example use: `nix-build -A test-all --keep-going`
   test-all = pkgs.symlinkJoin {
     name = "all-tests";
     paths = builtins.map
-      (args: mkTest (args // { pkg = workspace; }))
+      (args: mkTest (args // { pkg = examples.${args.exe}; }))
       (lib.cartesianProduct {
         displayServer = [ "x11" "wayland" ];
         exe = lib.attrNames examples;
