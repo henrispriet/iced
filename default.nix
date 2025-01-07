@@ -39,8 +39,8 @@ in {
     paths = builtins.map
       (args: mkTest (args // { pkg = workspace; }))
       (lib.cartesianProduct {
-	displayServer = [ "x11" "wayland" ];
-	exe = lib.attrNames examples;
+        displayServer = [ "x11" "wayland" ];
+        exe = lib.attrNames examples;
       });
   };
 
